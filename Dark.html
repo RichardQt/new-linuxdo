@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LINUX DO · 视界</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #020617; /* slate-950 */
+            color: #e5e7eb;
+        }
+
+        .card {
+            background: #0f172a;          /* slate-900 */
+            border-radius: 0.9rem;
+            border: 1px solid #1f2937;    /* slate-800 */
+            transition: all 0.18s ease-out;
+        }
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 24px rgba(15,23,42,0.6);
+            border-color: #38bdf8;       /* sky-400 */
+        }
+
+        .tag-pill {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 11px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 500;
+            border: 1px solid #1f2937;
+            background: #020617;
+            color: #9ca3af;
+            transition: all 0.16s ease-out;
+            text-decoration: none;
+        }
+        .tag-pill span {
+            display: inline-flex;
+            align-items: center;
+        }
+        .tag-pill:hover {
+            background: #0f172a;
+            border-color: #38bdf8;
+            color: #f9fafb;
+        }
+
+        .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 999px;
+            display: inline-block;
+            margin-right: 8px;
+        }
+
+        input, select {
+            background-color: #020617;
+            border-color: #1f2937;
+            color: #e5e7eb;
+        }
+        input::placeholder {
+            color: #6b7280;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: #38bdf8;
+            box-shadow: 0 0 0 1px rgba(56,189,248,0.7);
+        }
+
+        .footer-link {
+            font-size: 12px;
+            color: #6b7280;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: color 0.16s;
+        }
+        .footer-link:hover {
+            color: #e5e7eb;
+        }
+
+        .sidebar-link {
+            font-size: 12px;
+            color: #9ca3af;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: color 0.16s;
+        }
+        .sidebar-link:hover {
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+
+<div id="app" class="max-w-6xl mx-auto px-4 py-10">
+
+    <header class="text-center mb-8">
+        <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight text-slate-50 mb-2 flex items-center justify-center gap-2">
+            <span>LINUX DO</span>
+            <span class="text-slate-500">·</span>
+            <span>视界</span>
+        </h1>
+        <p class="text-xs md:text-sm text-slate-400 font-medium tracking-[0.18em] uppercase">
+            真诚 · 友善 · 团结 · 专业
+        </p>
+    </header>
+
+    <section class="card px-4 py-4 md:px-6 md:py-5 mb-6 sticky top-4 z-20 backdrop-blur">
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+
+            <div class="md:col-span-6">
+                <label class="text-[11px] font-semibold text-slate-400 mb-1 block">
+                    关键词
+                </label>
+                <input
+                    v-model="searchQuery"
+                    @keyup.enter="doSearch"
+                    type="text"
+                    placeholder="例如：人工智能 / 抽奖 / VPS / team..."
+                    class="w-full h-10 px-3 rounded-lg border text-sm"
+                >
+            </div>
+
+            <div class="md:col-span-3">
+                <label class="text-[11px] font-semibold text-slate-400 mb-1 block">
+                    搜索范围
+                </label>
+                <select
+                    v-model="searchType"
+                    class="w-full h-10 px-3 rounded-lg border text-sm cursor-pointer"
+                >
+                    <option value="topics">🧵 话题 / 帖子</option>
+                    <option value="users">👤 用户</option>
+                </select>
+            </div>
+
+            <div class="md:col-span-2">
+                <label class="text-[11px] font-semibold text-slate-400 mb-1 block">
+                    排序方式
+                </label>
+                <select
+                    v-model="sortType"
+                    :disabled="searchType === 'users'"
+                    class="w-full h-10 px-3 rounded-lg border text-sm cursor-pointer disabled:bg-slate-900 disabled:text-slate-600"
+                >
+                    <option value="">✨ 相关性</option>
+                    <option value="latest">🕒 最新帖子</option>
+                    <option value="latest_topic">💬 最新话题</option>
+                    <option value="likes">❤️ 赞最多</option>
+                    <option value="views">🔥 浏览最多</option>
+                    <option value="read">📖 最近阅读</option>
+                </select>
+            </div>
+
+            <div class="md:col-span-1">
+                <label class="text-[11px] font-semibold text-slate-400 mb-1 block">&nbsp;</label>
+                <button
+                    @click="doSearch"
+                    class="w-full h-10 rounded-lg bg-sky-500 text-slate-950 text-[13px] font-semibold flex items-center justify-center gap-1.5 hover:bg-sky-400 active:scale-[0.98] transition"
+                >
+                    L 站启动
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <section class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <a href="https://linux.do/latest" target="_blank" class="card p-4 flex flex-col items-center justify-center hover:bg-slate-800 hover:border-sky-500 transition group cursor-pointer no-underline">
+            <span class="text-3xl mb-2 group-hover:scale-110 transition">🕒</span>
+            <span class="text-sm font-bold text-slate-200">最新 Latest</span>
+            <span class="text-[10px] text-slate-500 mt-1">看热闹专用</span>
+        </a>
+        <a href="https://linux.do/new" target="_blank" class="card p-4 flex flex-col items-center justify-center hover:bg-slate-800 hover:border-green-500 transition group cursor-pointer no-underline">
+            <span class="text-3xl mb-2 group-hover:scale-110 transition">✨</span>
+            <span class="text-sm font-bold text-slate-200">新帖 New</span>
+            <span class="text-[10px] text-slate-500 mt-1">发现新大陆</span>
+        </a>
+        <a href="https://linux.do/hot" target="_blank" class="card p-4 flex flex-col items-center justify-center hover:bg-slate-800 hover:border-red-500 transition group cursor-pointer no-underline">
+            <span class="text-3xl mb-2 group-hover:scale-110 transition">🔥</span>
+            <span class="text-sm font-bold text-slate-200">热门 Hot</span>
+            <span class="text-[10px] text-slate-500 mt-1">近期热门</span>
+        </a>
+        <a href="https://linux.do/top" target="_blank" class="card p-4 flex flex-col items-center justify-center hover:bg-slate-800 hover:border-yellow-500 transition group cursor-pointer no-underline">
+            <span class="text-3xl mb-2 group-hover:scale-110 transition">🏆</span>
+            <span class="text-sm font-bold text-slate-200">排行 Top</span>
+            <span class="text-[10px] text-slate-500 mt-1">历史排行榜</span>
+        </a>
+    </section>
+
+    <section class="card px-4 py-4 md:px-6 md:py-5 mb-6">
+        <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-[0.18em] mb-3">
+            热门标签 Quick Tags
+        </div>
+        <div class="flex flex-wrap gap-2">
+            <a
+                v-for="tag in quickTags"
+                :key="tag.label"
+                :href="tag.url"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="tag-pill"
+            >
+                <span v-if="tag.emoji" class="mr-1">{{ tag.emoji }}</span>
+                <span>{{ tag.label }}</span>
+            </a>
+        </div>
+    </section>
+
+    <section class="mb-8">
+        <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-[0.18em] mb-3">
+            版块总览 Sections
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div
+                v-for="group in groups"
+                :key="group.title"
+                class="card p-4 md:p-5 flex flex-col"
+            >
+                <div class="flex items-start gap-3 mb-3 pb-2 border-b border-slate-800">
+                    <div class="text-2xl bg-slate-900 rounded-xl w-10 h-10 flex items-center justify-center">
+                        {{ group.icon }}
+                    </div>
+                    <div>
+                        <h2 class="text-sm font-semibold text-slate-50">
+                            {{ group.title }}
+                        </h2>
+                        <p class="text-[11px] text-slate-400 mt-0.5">
+                            {{ group.desc }}
+                        </p>
+                    </div>
+                </div>
+
+                <div class="space-y-2 flex-1">
+                    <a
+                        v-for="item in group.items"
+                        :key="item.name"
+                        :href="item.link"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="block rounded-lg px-2.5 py-2 hover:bg-slate-800 transition"
+                    >
+                        <div class="flex items-center justify-between mb-0.5">
+                            <div class="flex items-center text-[13px] font-medium text-slate-100">
+                                <span class="dot" :style="{ background: item.color }"></span>
+                                {{ item.name }}
+                            </div>
+                            <span class="text-[10px] text-slate-500">
+                                打开版块
+                            </span>
+                        </div>
+                        <div class="text-[11px] text-slate-400 truncate pl-4">
+                            {{ item.intro }}
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="card px-4 py-4 md:px-6 md:py-5 mb-6">
+        <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-[0.18em] mb-4">
+            常用传送门 Shortcuts
+        </div>
+
+        <div class="mb-5">
+            <div class="text-[11px] font-semibold text-slate-300 mb-2">
+                核心矩阵 Core Matrix
+            </div>
+            <div class="grid grid-cols-3 gap-3 text-[12px]">
+                <a href="https://connect.linux.do/" target="_blank" rel="noopener noreferrer"
+                   class="flex flex-col items-center justify-center p-2 rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-800 hover:border-sky-500 transition text-slate-200">
+                    <span class="text-lg mb-0.5">🔐</span>
+                    <span>Connect</span>
+                </a>
+                <a href="https://nav.linux.do/" target="_blank" rel="noopener noreferrer"
+                   class="flex flex-col items-center justify-center p-2 rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-800 hover:border-sky-500 transition text-slate-200">
+                    <span class="text-lg mb-0.5">🧭</span>
+                    <span>Nav</span>
+                </a>
+                <a href="https://wiki.linux.do/" target="_blank" rel="noopener noreferrer"
+                   class="flex flex-col items-center justify-center p-2 rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-800 hover:border-sky-500 transition text-slate-200">
+                    <span class="text-lg mb-0.5">📘</span>
+                    <span>Wiki</span>
+                </a>
+                <a href="https://idcflare.com/" target="_blank" rel="noopener noreferrer"
+                   class="flex flex-col items-center justify-center p-2 rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-800 hover:border-sky-500 transition text-slate-200">
+                    <span class="text-lg mb-0.5">🖥️</span>
+                    <span>IDC</span>
+                </a>
+                <a href="https://cdk.linux.do/" target="_blank" rel="noopener noreferrer"
+                   class="flex flex-col items-center justify-center p-2 rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-800 hover:border-sky-500 transition text-slate-200">
+                    <span class="text-lg mb-0.5">🔑</span>
+                    <span>CDK</span>
+                </a>
+                <a href="https://webmail.linux.do/" target="_blank" rel="noopener noreferrer"
+                   class="flex flex-col items-center justify-center p-2 rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-800 hover:border-sky-500 transition text-slate-200">
+                    <span class="text-lg mb-0.5">📧</span>
+                    <span>Mail</span>
+                </a>
+                <a href="https://lottery.linux.do/" target="_blank" rel="noopener noreferrer"
+                   class="flex flex-col items-center justify-center p-2 rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-800 hover:border-sky-500 transition text-slate-200">
+                    <span class="text-lg mb-0.5">🎲</span>
+                    <span>Lottery</span>
+                </a>
+                <a href="https://check.linux.do/" target="_blank" rel="noopener noreferrer"
+                   class="flex flex-col items-center justify-center p-2 rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-800 hover:border-sky-500 transition text-slate-200">
+                    <span class="text-lg mb-0.5">🛡️</span>
+                    <span>Check</span>
+                </a>
+                <a href="https://rate.linux.do/" target="_blank" rel="noopener noreferrer"
+                   class="flex flex-col items-center justify-center p-2 rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-800 hover:border-sky-500 transition text-slate-200">
+                    <span class="text-lg mb-0.5">⭐</span>
+                    <span>Rate</span>
+                </a>
+                <a href="https://2048.linux.do/" target="_blank" rel="noopener noreferrer"
+                   class="flex flex-col items-center justify-center p-2 rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-800 hover:border-sky-500 transition text-slate-200">
+                    <span class="text-lg mb-0.5">🎮</span>
+                    <span>2048</span>
+                </a>
+                <a href="https://linux.do/challenge" target="_blank" rel="noopener noreferrer"
+                   class="flex flex-col items-center justify-center p-2 rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-800 hover:border-sky-500 transition text-slate-200">
+                    <span class="text-lg mb-0.5">🏆</span>
+                    <span>Challenge</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="mb-5">
+            <div class="text-[11px] font-semibold text-slate-300 mb-2">
+                社区联络 Contact
+            </div>
+            <div class="grid grid-cols-2 gap-3 text-[13px]">
+                <a href="https://t.me/linux_do_channel" target="_blank" rel="noopener noreferrer"
+                   class="flex items-center justify-center p-2.5 rounded-lg border border-slate-800 bg-slate-900 hover:bg-slate-800 hover:border-sky-500 transition text-slate-200">
+                    <span class="mr-1.5">📣</span> TG Channel
+                </a>
+                <a href="https://t.me/ja_netfilter_group" target="_blank" rel="noopener noreferrer"
+                   class="flex items-center justify-center p-2.5 rounded-lg border border-slate-800 bg-slate-900 hover:bg-slate-800 hover:border-sky-500 transition text-slate-200">
+                    <span class="mr-1.5">👥</span> TG Group
+                </a>
+                <a href="https://github.com/linux-do" target="_blank" rel="noopener noreferrer"
+                   class="flex items-center justify-center p-2.5 rounded-lg border border-slate-800 bg-slate-900 hover:bg-slate-800 hover:border-sky-500 transition text-slate-200">
+                    <span class="mr-1.5">🐱</span> GitHub
+                </a>
+                <a href="mailto:admin@linux.do"
+                   class="flex items-center justify-center p-2.5 rounded-lg border border-slate-800 bg-slate-900 hover:bg-slate-800 hover:border-sky-500 transition text-slate-200">
+                    <span class="mr-1.5">✉️</span> Email
+                </a>
+            </div>
+        </div>
+
+        <div>
+            <div class="text-[11px] font-semibold text-slate-300 mb-2">
+                领航员手册 Must Read
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-4">
+                <div>
+                    <div class="text-[11px] text-slate-400 font-semibold mb-1">
+                        萌新 & 入门
+                    </div>
+                    <div class="space-y-1.5">
+                        <a href="https://linux.do/t/topic/545650" target="_blank" rel="noopener noreferrer" class="sidebar-link">
+                            <span>⚠️</span><span>注册须知</span>
+                        </a>
+                        <a href="https://linux.do/t/topic/26306" target="_blank" rel="noopener noreferrer" class="sidebar-link">
+                            <span>🧭</span><span>萌新指南</span>
+                        </a>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="text-[11px] text-slate-400 font-semibold mb-1">
+                        信任 & 文化
+                    </div>
+                    <div class="space-y-1.5">
+                        <a href="https://linux.do/t/topic/2460" target="_blank" rel="noopener noreferrer" class="sidebar-link">
+                            <span>📊</span><span>等级概述</span>
+                        </a>
+                        <a href="https://linux.do/t/topic/18797" target="_blank" rel="noopener noreferrer" class="sidebar-link">
+                            <span>🔐</span><span>等级权限</span>
+                        </a>
+                        <a href="https://linux.do/t/topic/188585" target="_blank" rel="noopener noreferrer" class="sidebar-link">
+                            <span>↔️</span><span>向左向右</span>
+                        </a>
+                        <a href="https://linux.do/t/topic/482293" target="_blank" rel="noopener noreferrer" class="sidebar-link">
+                            <span>🚫</span><span>拒绝戾气</span>
+                        </a>
+                        <a href="https://linux.do/t/topic/847468" target="_blank" rel="noopener noreferrer" class="sidebar-link">
+                            <span>🌱</span><span>数字花园</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="pt-6 pb-6 mt-4 text-center text-[11px] text-slate-500 border-t border-slate-800">
+        <div class="mb-1">
+            LINUX DO · 视界 | Where possible begins.
+        </div>
+        <div class="flex flex-wrap justify-center gap-4">
+            <a href="https://linux.do/privacy" target="_blank" rel="noopener noreferrer" class="footer-link">
+                隐私 Privacy
+            </a>
+            <a href="https://linux.do/tos" target="_blank" rel="noopener noreferrer" class="footer-link">
+                条款 Terms
+            </a>
+            <a href="https://linux.do/about" target="_blank" rel="noopener noreferrer" class="footer-link">
+                关于 About
+            </a>
+            <a href="https://status.linux.do" target="_blank" rel="noopener noreferrer" class="footer-link">
+                状态 Status
+            </a>
+        </div>
+    </footer>
+
+</div>
+
+<script>
+const { createApp } = Vue;
+
+// 版块数据
+const NAVIGATION_DATA = [
+    {
+        title: "技术 · 研动",
+        icon: "💻",
+        desc: "开发、测试、部署、安全与国产化",
+        items: [
+            {
+                name: "开发调优",
+                intro: "Dev / Test / Deploy / Security",
+                link: "https://linux.do/c/develop/4",
+                color: "#0ea5e9"
+            },
+            {
+                name: "国产替代",
+                intro: "汇聚中国智造，推动技术自强",
+                link: "https://linux.do/c/domestic/98",
+                color: "#f97316"
+            },
+            {
+                name: "社区孵化",
+                intro: "我的项目能很好地服务社区",
+                link: "https://linux.do/c/incubator/102",
+                color: "#eab308"
+            }
+        ]
+    },
+    {
+        title: "资源 · 洞察",
+        icon: "📚",
+        desc: "软件、文档、新闻与网络记忆",
+        items: [
+            {
+                name: "资源荟萃",
+                intro: "软件分享 / 开源仓库 / 视频课程 / 书籍",
+                link: "https://linux.do/c/resource/14",
+                color: "#6366f1"
+            },
+            {
+                name: "文档共建",
+                intro: "佬友一起写文档、做知识库",
+                link: "https://linux.do/c/wiki/42",
+                color: "#22c55e"
+            },
+            {
+                name: "前沿快讯",
+                intro: "前沿快讯，不出门能知天下事",
+                link: "https://linux.do/c/news/34",
+                color: "#0ea5e9"
+            },
+            {
+                name: "网络记忆",
+                intro: "网络是有记忆的，确信！",
+                link: "https://linux.do/c/feeds/92",
+                color: "#f97316"
+            }
+        ]
+    },
+    {
+        title: "生活 · 万象",
+        icon: "☕",
+        desc: "羊毛、水贴、阅读与求职",
+        items: [
+            {
+                name: "福利羊毛",
+                intro: "羊毛、抽奖等福利内容",
+                link: "https://linux.do/c/welfare/36",
+                color: "#f97316"
+            },
+            {
+                name: "搞七捻三",
+                intro: "闲聊吹水，不得讨论违规内容",
+                link: "https://linux.do/c/gossip/11",
+                color: "#22c55e"
+            },
+            {
+                name: "读书成诗",
+                intro: "跟着佬友一起在论坛读完一本书",
+                link: "https://linux.do/c/reading/32",
+                color: "#eab308"
+            },
+            {
+                name: "非我莫属",
+                intro: "招聘 / 求职 / 内推专用版块",
+                link: "https://linux.do/c/job/27",
+                color: "#0ea5e9"
+            }
+        ]
+    },
+    {
+        title: "市场 · 站务",
+        icon: "⚖️",
+        desc: "交易、推广、反馈与深海",
+        items: [
+            {
+                name: "跳蚤市场",
+                intro: "实体与虚拟物品供求、拼车等",
+                link: "https://linux.do/c/trade/10",
+                color: "#facc15"
+            },
+            {
+                name: "扬帆起航",
+                intro: "推广版块，目标是星辰大海",
+                link: "https://linux.do/c/startup/46",
+                color: "#ec4899"
+            },
+            {
+                name: "运营反馈",
+                intro: "有关站务运营和改进的讨论",
+                link: "https://linux.do/c/feedback/2",
+                color: "#0ea5e9"
+            },
+            {
+                name: "深海幽域",
+                intro: "不上信息流、不被论坛搜索的角落",
+                link: "https://linux.do/c/muted/45",
+                color: "#64748b"
+            }
+        ]
+    }
+];
+
+// 热门标签
+const QUICK_TAGS = [
+    { label: "人工智能", emoji: "🧠", url: "https://linux.do/tag/人工智能" },
+    { label: "抽奖",     emoji: "🎟️", url: "https://linux.do/tag/抽奖" },
+    { label: "公告",     emoji: "📢", url: "https://linux.do/tag/公告" },
+    { label: "精华神贴", emoji: "👍", url: "https://linux.do/tag/精华神帖" },
+    { label: "快问快答", emoji: "❓", url: "https://linux.do/tag/快问快答" },
+    { label: "集中贴",   emoji: "👥", url: "https://linux.do/tag/集中帖" },
+    { label: "原创",     emoji: "✏️", url: "https://linux.do/tag/原创" }
+];
+
+createApp({
+    data() {
+        return {
+            searchQuery: "",
+            searchType: "topics",
+            sortType: "",
+            groups: NAVIGATION_DATA,
+            quickTags: QUICK_TAGS
+        };
+    },
+    computed: {
+        generatedQuery() {
+            const baseUrl = "https://linux.do/search";
+            const params = new URLSearchParams();
+            const q = this.searchQuery.trim();
+
+            // 用户搜索
+            if (this.searchType === "users") {
+                if (q) params.append("q", q);
+                params.append("search_type", "users");
+                const qs = params.toString();
+                return qs ? `${baseUrl}?${qs}` : `${baseUrl}?search_type=users`;
+            }
+
+            // 话题 / 帖子搜索
+            const qParts = [];
+            if (q) qParts.push(q);
+            if (this.sortType) qParts.push(`order:${this.sortType}`);
+
+            const finalQ = qParts.join(" ");
+            if (!finalQ.trim()) {
+                return "https://linux.do/latest";
+            }
+
+            params.append("q", finalQ);
+            return `${baseUrl}?${params.toString()}`;
+        }
+    },
+    methods: {
+        doSearch() {
+            window.open(this.generatedQuery, "_blank");
+        }
+    }
+}).mount("#app");
+</script>
+
+</body>
+</html>
