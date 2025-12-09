@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LINUX DO · 视界</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* =========================================
+           CSS 变量定义 (主题核心)
+           ========================================= */
+        :root {
+            /* Light 模式变量 */
+            --bg-body: #f5f7fb;
+            --text-main: #111827;
+            --text-muted: #6b7280;
+            --text-sub: #9ca3af;
+            
+            --card-bg: #ffffff;
+            --card-border: #e5e7eb;
+            --card-shadow: rgba(15, 23, 42, 0.06);
+            --card-hover-border: #d1d5db;
+
+            --input-bg: #f9fafb;
+            --input-border: #e5e7eb;
+            --input-text: #1f2937;
+            
+            --tag-bg: #f9fafb;
+            --tag-border: #e5e7eb;
+            --tag-text: #4b5563;
+            --tag-hover-bg: #e5edff;
+            --tag-hover-text: #1f2933;
+            --tag-hover-border: #c7d2fe;
+
+            --btn-primary-bg: #0f172a;
+            --btn-primary-text: #ffffff;
+            --btn-primary-hover: #000000;
+
+            --icon-bg: #f1f5f9;
+            --section-hover: #f8fafc;
+        }
+
+        /* Dark 模式变量 */
+        body.dark {
+            --bg-body: #020617;
+            --text-main: #e5e7eb;
+            --text-muted: #9ca3af;
+            --text-sub: #6b7280;
+
+            --card-bg: #0f172a;
+            --card-border: #1f2937;
+            --card-shadow: rgba(15, 23, 42, 0.6);
+            --card-hover-border: #38bdf8;
+
+            --input-bg: #020617;
+            --input-border: #1f2937;
+            --input-text: #e5e7eb;
+
+            --tag-bg: #020617;
+            --tag-border: #1f2937;
+            --tag-text: #9ca3af;
+            --tag-hover-bg: #0f172a;
+            --tag-hover-text: #f9fafb;
+            --tag-hover-border: #38bdf8;
+
+            --btn-primary-bg: #0ea5e9;
+            --btn-primary-text: #020617;
+            --btn-primary-hover: #38bdf8;
+
+            --icon-bg: #1e293b;
+            --section-hover: #1e293b;
+        }
+
+        /* =========================================
+           通用样式
+           ========================================= */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 0.9rem;
+            border: 1px solid var(--card-border);
+            transition: all 0.2s ease-out;
+        }
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 24px var(--card-shadow);
+            border-color: var(--card-hover-border);
+        }
+
+        .tag-pill {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 11px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 500;
+            border: 1px solid var(--tag-border);
+            background: var(--tag-bg);
+            color: var(--tag-text);
+            transition: all 0.16s ease-out;
+            text-decoration: none;
+        }
+        .tag-pill:hover {
+            background: var(--tag-hover-bg);
+            color: var(--tag-hover-text);
+            border-color: var(--tag-hover-border);
+        }
+
+        .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 999px;
+            display: inline-block;
+            margin-right: 8px;
+        }
+
+        input, select {
+            background-color: var(--input-bg) !important;
+            border-color: var(--input-border) !important;
+            color: var(--input-text) !important;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #38bdf8 !important;
+            box-shadow: 0 0 0 1px rgba(56,189,248,0.7);
+        }
+
+        .search-btn {
+            background-color: var(--btn-primary-bg);
+            color: var(--btn-primary-text);
+        }
+        .search-btn:hover {
+            background-color: var(--btn-primary-hover);
+        }
+
+        .footer-link, .sidebar-link {
+            font-size: 12px;
+            color: var(--text-sub);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: color 0.16s;
+        }
+        .footer-link:hover, .sidebar-link:hover {
+            color: var(--text-main);
+        }
+
+        .section-item:hover {
+            background-color: var(--section-hover);
+        }
+        
+        .matrix-item {
+            background-color: var(--input-bg);
+            border-color: var(--card-border);
+            color: var(--text-muted);
+        }
+        .matrix-item:hover {
+            background-color: var(--section-hover);
+            color: var(--text-main);
+            border-color: #38bdf8;
+        }
+
+        h1 span { color: var(--text-main); }
+        h1 .divider { color: var(--text-sub); }
+
+        /* =========================================
+           悬浮工具栏样式 (New)
+           ========================================= */
+        .fixed-tools {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            z-index: 50;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .tool-btn {
+            width: 3rem;
+            height: 3rem;
+            border-radius: 9999px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            color: var(--text-muted);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .tool-btn:hover {
+            color: var(--text-main);
+            border-color: #38bdf8;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+        }
+
+        /* 动画效果：进入和离开 */
+        .fade-enter-active,
+        .fade-leave-active {
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .fade-enter-from,
+        .fade-leave-to {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+    </style>
+</head>
+<body :class="{ 'dark': isDarkMode }">
+
+<div id="app" class="max-w-6xl mx-auto px-4 py-10 relative">
+
+    <div class="fixed-tools">
+        <button @click="toggleTheme" class="tool-btn" :title="isDarkMode ? '切换到亮色模式' : '切换到暗色模式'">
+            <svg v-if="!isDarkMode" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+            <svg v-else xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+        </button>
+
+        <transition name="fade">
+            <button 
+                v-show="showBackToTop" 
+                @click="scrollToTop" 
+                class="tool-btn" 
+                title="回到顶部"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>
+            </button>
+        </transition>
+    </div>
+
+    <header class="text-center mb-8 pt-4">
+        <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight mb-2 flex items-center justify-center gap-2">
+            <span>LINUX DO</span>
+            <span class="divider">·</span>
+            <span>视界</span>
+        </h1>
+        <p class="text-xs md:text-sm font-medium tracking-[0.18em] uppercase" style="color: var(--text-sub)">
+            真诚 · 友善 · 团结 · 专业
+        </p>
+    </header>
+
+    <section class="card px-4 py-4 md:px-6 md:py-5 mb-6 sticky top-4 z-20 backdrop-blur" style="background: var(--card-bg); opacity: 0.98;">
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+            <div class="md:col-span-6">
+                <label class="text-[11px] font-semibold mb-1 block" style="color: var(--text-sub)">关键词</label>
+                <input
+                    v-model="searchQuery"
+                    @keyup.enter="doSearch"
+                    type="text"
+                    placeholder="例如：人工智能 / 抽奖 / VPS / team..."
+                    class="w-full h-10 px-3 rounded-lg border text-sm"
+                >
+            </div>
+
+            <div class="md:col-span-3">
+                <label class="text-[11px] font-semibold mb-1 block" style="color: var(--text-sub)">搜索范围</label>
+                <select
+                    v-model="searchType"
+                    class="w-full h-10 px-3 rounded-lg border text-sm cursor-pointer"
+                >
+                    <option value="topics">🧵 话题 / 帖子</option>
+                    <option value="users">👤 用户</option>
+                </select>
+            </div>
+
+            <div class="md:col-span-2">
+                <label class="text-[11px] font-semibold mb-1 block" style="color: var(--text-sub)">排序方式</label>
+                <select
+                    v-model="sortType"
+                    :disabled="searchType === 'users'"
+                    class="w-full h-10 px-3 rounded-lg border text-sm cursor-pointer disabled:opacity-50"
+                >
+                    <option value="">✨ 相关性</option>
+                    <option value="latest">🕒 最新帖子</option>
+                    <option value="latest_topic">💬 最新话题</option>
+                    <option value="likes">❤️ 赞最多</option>
+                    <option value="views">🔥 浏览最多</option>
+                    <option value="read">📖 最近阅读</option>
+                </select>
+            </div>
+
+            <div class="md:col-span-1">
+                <label class="text-[11px] font-semibold mb-1 block">&nbsp;</label>
+                <button
+                    @click="doSearch"
+                    class="search-btn w-full h-10 rounded-lg text-[13px] font-semibold flex items-center justify-center gap-1.5 active:scale-[0.98] transition"
+                >
+                    L 站启动
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <section class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <a href="https://linux.do/latest" target="_blank" class="card p-4 flex flex-col items-center justify-center cursor-pointer no-underline group hover:border-sky-400">
+            <span class="text-3xl mb-2 group-hover:scale-110 transition-transform duration-200">🕒</span>
+            <span class="text-sm font-bold group-hover:text-sky-500 transition-colors" style="color: var(--text-main)">最新 Latest</span>
+            <span class="text-[11px] mt-1 transition-colors" style="color: var(--text-muted)">看热闹专用</span>
+        </a>
+        <a href="https://linux.do/new" target="_blank" class="card p-4 flex flex-col items-center justify-center cursor-pointer no-underline group hover:border-green-400">
+            <span class="text-3xl mb-2 group-hover:scale-110 transition-transform duration-200">✨</span>
+            <span class="text-sm font-bold group-hover:text-green-500 transition-colors" style="color: var(--text-main)">新帖 New</span>
+            <span class="text-[11px] mt-1 transition-colors" style="color: var(--text-muted)">发现新大陆</span>
+        </a>
+        <a href="https://linux.do/hot" target="_blank" class="card p-4 flex flex-col items-center justify-center cursor-pointer no-underline group hover:border-red-400">
+            <span class="text-3xl mb-2 group-hover:scale-110 transition-transform duration-200">🔥</span>
+            <span class="text-sm font-bold group-hover:text-red-500 transition-colors" style="color: var(--text-main)">热门 Hot</span>
+            <span class="text-[11px] mt-1 transition-colors" style="color: var(--text-muted)">近期热门</span>
+        </a>
+        <a href="https://linux.do/top" target="_blank" class="card p-4 flex flex-col items-center justify-center cursor-pointer no-underline group hover:border-yellow-400">
+            <span class="text-3xl mb-2 group-hover:scale-110 transition-transform duration-200">🏆</span>
+            <span class="text-sm font-bold group-hover:text-yellow-500 transition-colors" style="color: var(--text-main)">排行 Top</span>
+            <span class="text-[11px] mt-1 transition-colors" style="color: var(--text-muted)">历史排行榜</span>
+        </a>
+    </section>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <main class="lg:col-span-8 flex flex-col gap-6">
+
+            <section class="card px-4 py-4 md:px-6 md:py-5">
+                <div class="text-[11px] font-semibold uppercase tracking-[0.18em] mb-3" style="color: var(--text-sub)">
+                    热门标签 Quick Tags
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    <a
+                        v-for="tag in quickTags"
+                        :key="tag.label"
+                        :href="tag.url"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="tag-pill"
+                    >
+                        <span v-if="tag.emoji" class="mr-1">{{ tag.emoji }}</span>
+                        <span>{{ tag.label }}</span>
+                    </a>
+                </div>
+            </section>
+
+            <section>
+                <div class="text-[11px] font-semibold uppercase tracking-[0.18em] mb-3" style="color: var(--text-sub)">
+                    版块总览 Sections
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div
+                        v-for="group in groups"
+                        :key="group.title"
+                        class="card p-4 md:p-5 flex flex-col"
+                    >
+                        <div class="flex items-start gap-3 mb-3 pb-2 border-b" style="border-color: var(--card-border)">
+                            <div class="text-2xl rounded-xl w-10 h-10 flex items-center justify-center" style="background-color: var(--icon-bg)">
+                                {{ group.icon }}
+                            </div>
+                            <div>
+                                <h2 class="text-sm font-semibold" style="color: var(--text-main)">
+                                    {{ group.title }}
+                                </h2>
+                                <p class="text-[11px] mt-0.5" style="color: var(--text-muted)">
+                                    {{ group.desc }}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2 flex-1">
+                            <a
+                                v-for="item in group.items"
+                                :key="item.name"
+                                :href="item.link"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                class="section-item block rounded-lg px-2.5 py-2 transition"
+                            >
+                                <div class="flex items-center justify-between mb-0.5">
+                                    <div class="flex items-center text-[13px] font-medium" style="color: var(--text-main)">
+                                        <span class="dot" :style="{ background: item.color }"></span>
+                                        {{ item.name }}
+                                    </div>
+                                    <span class="text-[10px]" style="color: var(--text-sub)">
+                                        打开版块
+                                    </span>
+                                </div>
+                                <div class="text-[11px] truncate pl-4" style="color: var(--text-muted)">
+                                    {{ item.intro }}
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+        <aside class="lg:col-span-4 space-y-4">
+
+            <section class="card p-4 md:p-5">
+                <h3 class="text-[11px] font-semibold uppercase tracking-[0.18em] mb-3" style="color: var(--text-sub)">
+                    核心矩阵 Core Matrix
+                </h3>
+                <div class="grid grid-cols-3 gap-3">
+                    <a href="https://connect.linux.do/" target="_blank" rel="noopener noreferrer"
+                       class="matrix-item flex flex-col items-center justify-center p-3 rounded-xl border transition text-[11px]">
+                        <span class="text-xl mb-1">🔐</span>
+                        <span>Connect</span>
+                    </a>
+                    <a href="https://nav.linux.do/" target="_blank" rel="noopener noreferrer"
+                       class="matrix-item flex flex-col items-center justify-center p-3 rounded-xl border transition text-[11px]">
+                        <span class="text-xl mb-1">🧭</span>
+                        <span>Nav</span>
+                    </a>
+                    <a href="https://wiki.linux.do/" target="_blank" rel="noopener noreferrer"
+                       class="matrix-item flex flex-col items-center justify-center p-3 rounded-xl border transition text-[11px]">
+                        <span class="text-xl mb-1">📘</span>
+                        <span>Wiki</span>
+                    </a>
+                    <a href="https://idcflare.com/" target="_blank" rel="noopener noreferrer"
+                       class="matrix-item flex flex-col items-center justify-center p-3 rounded-xl border transition text-[11px]">
+                        <span class="text-xl mb-1">🖥️</span>
+                        <span>IDC</span>
+                    </a>
+                    <a href="https://cdk.linux.do/" target="_blank" rel="noopener noreferrer"
+                       class="matrix-item flex flex-col items-center justify-center p-3 rounded-xl border transition text-[11px]">
+                        <span class="text-xl mb-1">🔑</span>
+                        <span>CDK</span>
+                    </a>
+                    <a href="https://webmail.linux.do/" target="_blank" rel="noopener noreferrer"
+                       class="matrix-item flex flex-col items-center justify-center p-3 rounded-xl border transition text-[11px]">
+                        <span class="text-xl mb-1">📧</span>
+                        <span>Mail</span>
+                    </a>
+                    <a href="https://lottery.linux.do/" target="_blank" rel="noopener noreferrer"
+                       class="matrix-item flex flex-col items-center justify-center p-3 rounded-xl border transition text-[11px]">
+                        <span class="text-xl mb-1">🎲</span>
+                        <span>Lottery</span>
+                    </a>
+                    <a href="https://check.linux.do/" target="_blank" rel="noopener noreferrer"
+                       class="matrix-item flex flex-col items-center justify-center p-3 rounded-xl border transition text-[11px]">
+                        <span class="text-xl mb-1">🛡️</span>
+                        <span>Check</span>
+                    </a>
+                    <a href="https://rate.linux.do/" target="_blank" rel="noopener noreferrer"
+                       class="matrix-item flex flex-col items-center justify-center p-3 rounded-xl border transition text-[11px]">
+                        <span class="text-xl mb-1">⭐</span>
+                        <span>Rate</span>
+                    </a>
+                    <a href="https://2048.linux.do/" target="_blank" rel="noopener noreferrer"
+                       class="matrix-item flex flex-col items-center justify-center p-3 rounded-xl border transition text-[11px]">
+                        <span class="text-xl mb-1">🎮</span>
+                        <span>2048</span>
+                    </a>
+                    <a href="https://linux.do/challenge" target="_blank" rel="noopener noreferrer"
+                       class="matrix-item flex flex-col items-center justify-center p-3 rounded-xl border transition text-[11px]">
+                        <span class="text-xl mb-1">🏆</span>
+                        <span>Challenge</span>
+                    </a>
+                </div>
+            </section>
+
+            <section class="card p-4 md:p-5">
+                <h3 class="text-[11px] font-semibold uppercase tracking-[0.18em] mb-3" style="color: var(--text-sub)">
+                    社区联络 Contact
+                </h3>
+                <div class="grid grid-cols-2 gap-3 text-[13px]">
+                    <a href="https://t.me/linux_do_channel" target="_blank" rel="noopener noreferrer"
+                       class="matrix-item flex items-center justify-center p-2.5 rounded-lg border transition">
+                        <span class="mr-1.5">📣</span> TG Channel
+                    </a>
+                    <a href="https://t.me/ja_netfilter_group" target="_blank" rel="noopener noreferrer"
+                       class="matrix-item flex items-center justify-center p-2.5 rounded-lg border transition">
+                        <span class="mr-1.5">👥</span> TG Group
+                    </a>
+                    <a href="https://github.com/linux-do" target="_blank" rel="noopener noreferrer"
+                       class="matrix-item flex items-center justify-center p-2.5 rounded-lg border transition">
+                        <span class="mr-1.5">🐱</span> GitHub
+                    </a>
+                    <a href="mailto:admin@linux.do"
+                       class="matrix-item flex items-center justify-center p-2.5 rounded-lg border transition">
+                        <span class="mr-1.5">✉️</span> Email
+                    </a>
+                </div>
+            </section>
+
+            <section class="card p-4 md:p-5">
+                <h3 class="text-[11px] font-semibold uppercase tracking-[0.18em] mb-3" style="color: var(--text-sub)">
+                    领航员手册 Must Read
+                </h3>
+
+                <div class="text-[11px] font-semibold mb-1" style="color: var(--text-muted)">
+                    萌新 & 入门
+                </div>
+                <div class="grid grid-cols-2 gap-2 mb-3">
+                    <a href="https://linux.do/t/topic/545650" target="_blank" rel="noopener noreferrer" class="sidebar-link">
+                        <span>⚠️</span><span>注册须知</span>
+                    </a>
+                    <a href="https://linux.do/t/topic/26306" target="_blank" rel="noopener noreferrer" class="sidebar-link">
+                        <span>🧭</span><span>萌新指南</span>
+                    </a>
+                </div>
+
+                <div class="text-[11px] font-semibold mb-1" style="color: var(--text-muted)">
+                    信任 & 文化
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <a href="https://linux.do/t/topic/2460" target="_blank" rel="noopener noreferrer" class="sidebar-link">
+                        <span>📊</span><span>等级概述</span>
+                    </a>
+                    <a href="https://linux.do/t/topic/18797" target="_blank" rel="noopener noreferrer" class="sidebar-link">
+                        <span>🔐</span><span>等级权限</span>
+                    </a>
+                    <a href="https://linux.do/t/topic/188585" target="_blank" rel="noopener noreferrer" class="sidebar-link">
+                        <span>↔️</span><span>向左向右</span>
+                    </a>
+                    <a href="https://linux.do/t/topic/482293" target="_blank" rel="noopener noreferrer" class="sidebar-link">
+                        <span>🚫</span><span>拒绝戾气</span>
+                    </a>
+                    <a href="https://linux.do/t/topic/847468" target="_blank" rel="noopener noreferrer" class="sidebar-link">
+                        <span>🌱</span><span>数字花园</span>
+                    </a>
+                </div>
+            </section>
+
+        </aside>
+
+    </div>
+
+    <footer class="pt-6 pb-6 mt-8 text-center text-[11px] border-t" style="border-color: var(--input-border); color: var(--text-sub)">
+        <div class="mb-1">
+            LINUX DO · 视界 | Where possible begins.
+        </div>
+        <div class="flex flex-wrap justify-center gap-4">
+            <a href="https://linux.do/privacy" target="_blank" rel="noopener noreferrer" class="footer-link">
+                隐私 Privacy
+            </a>
+            <a href="https://linux.do/tos" target="_blank" rel="noopener noreferrer" class="footer-link">
+                条款 Terms
+            </a>
+            <a href="https://linux.do/about" target="_blank" rel="noopener noreferrer" class="footer-link">
+                关于 About
+            </a>
+            <a href="https://status.linux.do" target="_blank" rel="noopener noreferrer" class="footer-link">
+                状态 Status
+            </a>
+        </div>
+    </footer>
+
+</div>
+
+<script>
+const { createApp } = Vue;
+
+const NAVIGATION_DATA = [
+    {
+        title: "技术 · 研动",
+        icon: "💻",
+        desc: "开发、测试、部署、安全与国产化",
+        items: [
+            { name: "开发调优", intro: "Dev / Test / Deploy / Security", link: "https://linux.do/c/develop/4", color: "#0ea5e9" },
+            { name: "国产替代", intro: "汇聚中国智造，技术自强", link: "https://linux.do/c/domestic/98", color: "#f97316" },
+            { name: "社区孵化", intro: "我的项目，服务于社区", link: "https://linux.do/c/incubator/102", color: "#eab308" }
+        ]
+    },
+    {
+        title: "资源 · 洞察",
+        icon: "📚",
+        desc: "软件、文档、新闻与记忆",
+        items: [
+            { name: "资源荟萃", intro: "软件, 开源, 课程, 书籍", link: "https://linux.do/c/resource/14", color: "#6366f1" },
+            { name: "文档共建", intro: "佬友化身翰林学士，共编百科", link: "https://linux.do/c/wiki/42", color: "#22c55e" },
+            { name: "前沿快讯", intro: "不出门能知天下事", link: "https://linux.do/c/news/34", color: "#0ea5e9" },
+            { name: "网络记忆", intro: "网络是有记忆的，确信！", link: "https://linux.do/c/feeds/92", color: "#f97316" }
+        ]
+    },
+    {
+        title: "生活 · 万象",
+        icon: "☕",
+        desc: "羊毛、水贴、阅读与求职",
+        items: [
+            { name: "福利羊毛", intro: "羊毛、抽奖等福利使用", link: "https://linux.do/c/welfare/36", color: "#f97316" },
+            { name: "搞七捻三", intro: "闲聊吹水，禁止政治色情", link: "https://linux.do/c/gossip/11", color: "#22c55e" },
+            { name: "读书成诗", intro: "一起在论坛读完一本书", link: "https://linux.do/c/reading/32", color: "#eab308" },
+            { name: "非我莫属", intro: "招聘 / 求职专用", link: "https://linux.do/c/job/27", color: "#0ea5e9" }
+        ]
+    },
+    {
+        title: "市场 · 站务",
+        icon: "⚖️",
+        desc: "交易、推广、反馈与深海",
+        items: [
+            { name: "跳蚤市场", intro: "实体/虚拟物品供求、拼车", link: "https://linux.do/c/trade/10", color: "#facc15" },
+            { name: "扬帆起航", intro: "推广版块，目标是星辰大海", link: "https://linux.do/c/startup/46", color: "#ec4899" },
+            { name: "运营反馈", intro: "关于网站改进的讨论", link: "https://linux.do/c/feedback/2", color: "#0ea5e9" },
+            { name: "深海幽域", intro: "不上信息流、不被搜索", link: "https://linux.do/c/muted/45", color: "#64748b" }
+        ]
+    }
+];
+
+const QUICK_TAGS = [
+    { label: "人工智能", emoji: "🧠", url: "https://linux.do/tag/人工智能" },
+    { label: "抽奖",     emoji: "🎟️", url: "https://linux.do/tag/抽奖" },
+    { label: "公告",     emoji: "📢", url: "https://linux.do/tag/公告" },
+    { label: "精华神贴", emoji: "👍", url: "https://linux.do/tag/精华神帖" },
+    { label: "快问快答", emoji: "❓", url: "https://linux.do/tag/快问快答" },
+    { label: "集中贴",   emoji: "👥", url: "https://linux.do/tag/集中帖" },
+    { label: "原创",     emoji: "✏️", url: "https://linux.do/tag/原创" }
+];
+
+createApp({
+    data() {
+        return {
+            searchQuery: "",
+            searchType: "topics",
+            sortType: "",
+            groups: NAVIGATION_DATA,
+            quickTags: QUICK_TAGS,
+            isDarkMode: false,
+            showBackToTop: false // 控制回到顶部按钮显示
+        };
+    },
+    created() {
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark') {
+            this.isDarkMode = true;
+        } else if (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            this.isDarkMode = true;
+        }
+        
+        if (this.isDarkMode) {
+            document.body.classList.add('dark');
+        }
+    },
+    mounted() {
+        // 监听滚动事件
+        window.addEventListener('scroll', this.handleScroll);
+    },
+    beforeUnmount() {
+        // 移除监听
+        window.removeEventListener('scroll', this.handleScroll);
+    },
+    watch: {
+        isDarkMode(newVal) {
+            if (newVal) {
+                document.body.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                document.body.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+            }
+        }
+    },
+    computed: {
+        generatedQuery() {
+            const baseUrl = "https://linux.do/search";
+            const params = new URLSearchParams();
+            const q = this.searchQuery.trim();
+
+            if (this.searchType === "users") {
+                if (q) params.append("q", q);
+                params.append("search_type", "users");
+                const qs = params.toString();
+                return qs ? `${baseUrl}?${qs}` : `${baseUrl}?search_type=users`;
+            }
+
+            const qParts = [];
+            if (q) qParts.push(q);
+            if (this.sortType) qParts.push(`order:${this.sortType}`);
+
+            const finalQ = qParts.join(" ");
+            if (!finalQ.trim()) {
+                return "https://linux.do/latest";
+            }
+
+            params.append("q", finalQ);
+            return `${baseUrl}?${params.toString()}`;
+        }
+    },
+    methods: {
+        doSearch() {
+            window.open(this.generatedQuery, "_blank");
+        },
+        toggleTheme() {
+            this.isDarkMode = !this.isDarkMode;
+        },
+        // 处理滚动显示/隐藏按钮
+        handleScroll() {
+            this.showBackToTop = window.scrollY > 300;
+        },
+        // 平滑回到顶部
+        scrollToTop() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        }
+    }
+}).mount("#app");
+</script>
+
+</body>
+</html>
